@@ -5,9 +5,18 @@
 html,
 body {
   height: 100%;
+  /* evita pull-to-refresh e bounce orizzontale durante drag&drop nei giochi */
+  overscroll-behavior: contain;
+  /* rimuove il flash blu di iOS al tap su elementi cliccabili */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* niente selezione testo accidentale durante long-press / drag */
+  -webkit-user-select: none;
+  user-select: none;
+  /* riduce il delay di 300ms del click su mobile */
+  touch-action: manipulation;
 }
