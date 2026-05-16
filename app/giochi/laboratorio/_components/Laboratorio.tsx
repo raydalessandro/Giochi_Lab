@@ -19,6 +19,7 @@ import {
   newInstanceId,
   type PieceInstance,
 } from '../_lib/composition';
+import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
 
 // === STATE ===
 interface State {
@@ -115,9 +116,33 @@ function reducer(state: State, action: Action): State {
 const BOND_DISTANCE = 95;        // distanza sotto la quale due atomi si legano
 const ATOM_SIZE = 72;            // dimensione dell'AtomBall sullo stage
 
+// === PERSISTENZA ===
+// Persiste solo il progresso (stelle + molecole scoperte).
+// Stage corrente, popup, pannello collection sono volatili: tornano puliti al refresh.
+const LABORATORIO_CODEC = {
+  stringify: (s: State) =>
+    JSON.stringify({
+      stars: s.stars,
+      discoveredIds: Array.from(s.discoveredIds),
+    }),
+  parse: (raw: string): State => {
+    const data = JSON.parse(raw) as { stars?: number; discoveredIds?: string[] };
+    return {
+      ...INITIAL,
+      stars: data.stars ?? 0,
+      discoveredIds: new Set(data.discoveredIds ?? []),
+    };
+  },
+};
+
 // === COMPONENT ===
 export default function Laboratorio() {
-  const [state, dispatch] = useReducer(reducer, INITIAL);
+  const [state, dispatch] = usePersistedReducer(
+    'giochi-lab:laboratorio',
+    reducer,
+    INITIAL,
+    LABORATORIO_CODEC
+  );
   const stageRef = useRef<HTMLDivElement>(null);
 
   // --- ADD ATOM dal palette ---

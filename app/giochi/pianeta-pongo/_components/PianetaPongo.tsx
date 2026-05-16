@@ -13,6 +13,7 @@ import {
 } from '../_data/continents';
 import { generateMission, type Mission } from '../_data/missions';
 import { useDrag } from '../_hooks/useDragDrop';
+import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
 
 // === STATO ===
 type GameMode = 'explore' | 'mission';
@@ -89,9 +90,33 @@ const INITIAL_STATE: GameState = {
   exploredContinents: new Set(),
 };
 
+// === PERSISTENZA ===
+// Persiste solo il progresso (stelle + continenti esplorati).
+// Mission attiva, celebration, selezione corrente sono volatili.
+const PONGO_CODEC = {
+  stringify: (s: GameState) =>
+    JSON.stringify({
+      stars: s.stars,
+      exploredContinents: Array.from(s.exploredContinents),
+    }),
+  parse: (raw: string): GameState => {
+    const data = JSON.parse(raw) as { stars?: number; exploredContinents?: ContinentId[] };
+    return {
+      ...INITIAL_STATE,
+      stars: data.stars ?? 0,
+      exploredContinents: new Set(data.exploredContinents ?? []),
+    };
+  },
+};
+
 // === COMPONENT ===
 export default function PianetaPongo() {
-  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const [state, dispatch] = usePersistedReducer(
+    'giochi-lab:pongo',
+    reducer,
+    INITIAL_STATE,
+    PONGO_CODEC
+  );
   const [hoverTargetId, setHoverTargetId] = useState<ContinentId | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const animalHomePos = useRef({ x: 0, y: 0 });

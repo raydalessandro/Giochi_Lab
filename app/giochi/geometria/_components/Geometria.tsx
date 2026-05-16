@@ -17,6 +17,7 @@ import {
   type SegmentLength,
 } from '../_lib/geometry';
 import { SHAPES, getShape, type ShapeInfo } from '../_data/shapes';
+import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
 
 // === STATE ===
 interface State {
@@ -125,9 +126,33 @@ function reducer(state: State, action: Action): State {
   }
 }
 
+// === PERSISTENZA ===
+// Persiste solo il progresso (stelle + forme scoperte).
+// Segmenti sullo stage e popup sono volatili.
+const GEOMETRIA_CODEC = {
+  stringify: (s: State) =>
+    JSON.stringify({
+      stars: s.stars,
+      discoveredIds: Array.from(s.discoveredIds),
+    }),
+  parse: (raw: string): State => {
+    const data = JSON.parse(raw) as { stars?: number; discoveredIds?: string[] };
+    return {
+      ...INITIAL,
+      stars: data.stars ?? 0,
+      discoveredIds: new Set(data.discoveredIds ?? []),
+    };
+  },
+};
+
 // === COMPONENT ===
 export default function Geometria() {
-  const [state, dispatch] = useReducer(reducer, INITIAL);
+  const [state, dispatch] = usePersistedReducer(
+    'giochi-lab:geometria',
+    reducer,
+    INITIAL,
+    GEOMETRIA_CODEC
+  );
   const stageRef = useRef<HTMLDivElement>(null);
 
   const handleSpawn = useCallback((length: SegmentLength) => {
