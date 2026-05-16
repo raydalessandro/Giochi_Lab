@@ -8,6 +8,8 @@ import Carrucola from './machines/Carrucola';
 import Cuneo from './machines/Cuneo';
 import Vite from './machines/Vite';
 import RuotaAsse from './machines/RuotaAsse';
+import SoundToggle from '@/app/_shared/SoundToggle';
+import { playSelect } from '@/app/_shared/sound';
 
 type MachineId = 'leva' | 'piano' | 'carrucola' | 'cuneo' | 'vite' | 'ruota' | null;
 
@@ -53,7 +55,8 @@ export default function Fisica() {
                 'radial-gradient(ellipse at top, #fce7f3 0%, #fbcfe8 40%, #f9a8d4 100%)',
             }}
           >
-            <header className="px-4 py-4 bg-white/30 backdrop-blur">
+            <header className="px-4 py-4 bg-white/30 backdrop-blur relative">
+              <SoundToggle className="absolute top-3 right-3 bg-white/95 w-9 h-9 rounded-full shadow flex items-center justify-center text-base" />
               <h1 className="text-2xl font-extrabold text-pink-900 text-center">
                 🔧 Le Macchine Semplici
               </h1>
@@ -67,7 +70,10 @@ export default function Fisica() {
                 <motion.button
                   key={m.id}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setActive(m.id)}
+                  onClick={() => {
+                    playSelect();
+                    setActive(m.id);
+                  }}
                   className={`${m.color} rounded-3xl p-4 shadow-lg border-2 border-white text-left active:shadow-md transition`}
                 >
                   <div className="text-5xl">{m.emoji}</div>

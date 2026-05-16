@@ -18,6 +18,8 @@ import {
 } from '../_lib/geometry';
 import { SHAPES, getShape, type ShapeInfo } from '../_data/shapes';
 import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
+import SoundToggle from '@/app/_shared/SoundToggle';
+import { playSnap, playDiscovery } from '@/app/_shared/sound';
 
 // === STATE ===
 interface State {
@@ -224,6 +226,7 @@ export default function Geometria() {
         const partner = state.segments.find((s) => s.instanceId === first.target!.segmentId);
         if (partner) {
           const partnerPoint = first.target!.which === 'a' ? partner.a : partner.b;
+          playSnap();
           dispatch({
             type: 'SNAP_SEGMENT',
             id,
@@ -256,6 +259,7 @@ export default function Geometria() {
     const pythagoras = classId === 'triangle_right'; // 3-4-5
 
     const t = setTimeout(() => {
+      playDiscovery();
       dispatch({
         type: 'DISCOVER',
         shape,
@@ -288,6 +292,7 @@ export default function Geometria() {
           📐 La Geometria
         </h1>
         <div className="flex items-center gap-2">
+          <SoundToggle className="bg-white/95 w-9 h-9 rounded-full shadow flex items-center justify-center text-base" />
           <button
             onClick={() => dispatch({ type: 'TOGGLE_COLLECTION' })}
             className="bg-white/90 px-3 py-1.5 rounded-full text-purple-700 font-bold text-sm shadow active:scale-95"

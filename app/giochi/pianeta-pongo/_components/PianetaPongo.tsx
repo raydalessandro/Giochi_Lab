@@ -14,6 +14,8 @@ import {
 import { generateMission, type Mission } from '../_data/missions';
 import { useDrag } from '../_hooks/useDragDrop';
 import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
+import SoundToggle from '@/app/_shared/SoundToggle';
+import { playTap, playDiscovery, playReject } from '@/app/_shared/sound';
 
 // === STATO ===
 type GameMode = 'explore' | 'mission';
@@ -157,6 +159,7 @@ export default function PianetaPongo() {
 
   const handleContinentClick = useCallback((id: ContinentId) => {
     if (state.mode === 'mission') return; // disabilita click su mappa durante missione
+    playTap();
     dispatch({ type: 'SELECT_CONTINENT', id });
   }, [state.mode]);
 
@@ -208,8 +211,11 @@ export default function PianetaPongo() {
         <h1 className="text-xl font-extrabold text-white drop-shadow">
           🌍 Pianeta di Pongo
         </h1>
-        <div className="bg-white/95 px-4 py-1.5 rounded-full text-yellow-500 font-bold text-lg shadow flex items-center gap-1">
-          {state.stars} <span>⭐</span>
+        <div className="flex items-center gap-2">
+          <SoundToggle className="bg-white/95 w-10 h-10 rounded-full shadow flex items-center justify-center text-lg" />
+          <div className="bg-white/95 px-4 py-1.5 rounded-full text-yellow-500 font-bold text-lg shadow flex items-center gap-1">
+            {state.stars} <span>⭐</span>
+          </div>
         </div>
       </header>
 
@@ -270,8 +276,10 @@ export default function PianetaPongo() {
             onDrop={(continentId) => {
               if (continentId === state.mission?.correctContinent.id) {
                 setHoverTargetId(null);
+                playDiscovery();
                 dispatch({ type: 'MISSION_SUCCESS' });
               } else {
+                playReject();
                 // rimbalza indietro (gestito internamente dal componente con reset)
               }
             }}

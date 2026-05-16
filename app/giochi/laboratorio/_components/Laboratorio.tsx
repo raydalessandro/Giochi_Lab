@@ -20,6 +20,8 @@ import {
   type PieceInstance,
 } from '../_lib/composition';
 import { usePersistedReducer } from '@/app/_shared/usePersistedReducer';
+import SoundToggle from '@/app/_shared/SoundToggle';
+import { playSnap, playDiscovery } from '@/app/_shared/sound';
 
 // === STATE ===
 interface State {
@@ -176,6 +178,7 @@ export default function Laboratorio() {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < BOND_DISTANCE) {
+        playSnap();
         dispatch({ type: 'BOND', aId: instanceId, bId: other.instanceId });
         // un legame alla volta per drag
         return;
@@ -194,6 +197,7 @@ export default function Laboratorio() {
         const isNew = !state.discoveredIds.has(molecule.id);
         // Piccolo delay per far vedere il momento "click finale"
         const t = setTimeout(() => {
+          playDiscovery();
           dispatch({ type: 'DISCOVER', molecule, isNew });
         }, 600);
         return () => clearTimeout(t);
@@ -219,6 +223,7 @@ export default function Laboratorio() {
           🧪 Il Laboratorio
         </h1>
         <div className="flex items-center gap-2">
+          <SoundToggle className="bg-white/95 w-9 h-9 rounded-full shadow flex items-center justify-center text-base" />
           <button
             onClick={() => dispatch({ type: 'TOGGLE_COLLECTION' })}
             className="bg-white/90 px-3 py-1.5 rounded-full text-purple-700 font-bold text-sm shadow active:scale-95"
