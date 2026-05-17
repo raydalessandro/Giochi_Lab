@@ -9,8 +9,6 @@ import { usePongoState } from '../../_lib/pongo-state';
 import SoundToggle from '@/app/_shared/SoundToggle';
 import { playSnap, playReject, playDiscovery, playTap } from '@/app/_shared/sound';
 
-// Map name → photo (o null se la fetch non ha dato risultati / non ci sono
-// searchQuery configurate per quel continente).
 export type AnimalPhotos = Record<string, PexelsPhoto | null>;
 
 // === SFONDI PER CONTINENTE ===
@@ -39,6 +37,7 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
   const bonusAlreadyGiven = !!state.bonused[continent.id];
 
   const [celebrate, setCelebrate] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   // Trigger bonus quando si completa la prima volta
   useEffect(() => {
@@ -53,10 +52,8 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
     }
   }, [allMatched, bonusAlreadyGiven, hydrated, continent.id, completeBonus]);
 
-  // Refs delle 3 dropzone (uno per habitat)
   const habitatRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  /** Trova quale habitat il punto (x,y in coord client) sta sopra. */
   function findHabitatAt(x: number, y: number): string | null {
     for (const h of continent.habitats) {
       const el = habitatRefs.current[h.id];
@@ -83,7 +80,6 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
     }
   }
 
-  // Tutte le foto dei fotografi mostrati nella scena, per attribution Pexels
   const photographers = Array.from(
     new Set(
       animals
@@ -98,46 +94,51 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
       className="w-screen h-screen flex flex-col overflow-hidden"
       style={{ background: BACKGROUNDS[continent.id] }}
     >
-      {/* HEADER */}
-      <header className="flex justify-between items-center px-4 py-2 bg-white/30 backdrop-blur z-10 shrink-0">
+      {/* === TOP BAR (sottile, ~44px) === */}
+      <header className="flex items-center justify-between px-3 h-11 bg-white/40 backdrop-blur shrink-0 border-b border-white/40 z-10">
         <Link
           href="/giochi/pianeta-pongo"
           aria-label="Torna alla mappa"
           onClick={() => playTap()}
-          className="bg-white/95 w-10 h-10 rounded-full shadow flex items-center justify-center text-lg font-bold text-slate-700 hover:bg-white"
+          className="w-9 h-9 rounded-full bg-white/95 flex items-center justify-center text-base font-bold text-slate-700 shadow hover:bg-white"
         >
           ←
         </Link>
-        <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 flex items-center gap-2">
-          <span className="text-2xl">{continent.flag}</span>
+        <h1 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-1.5 truncate">
+          <span className="text-lg sm:text-xl">{continent.flag}</span>
           {continent.name}
         </h1>
-        <div className="flex items-center gap-2">
-          <SoundToggle className="bg-white/95 w-10 h-10 rounded-full shadow flex items-center justify-center text-lg" />
-          <div className="bg-white/95 px-3 py-1.5 rounded-full text-yellow-500 font-bold shadow flex items-center gap-1">
-            {state.stars} <span>⭐</span>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              playTap();
+              setShowInfo(true);
+            }}
+            aria-label="Curiosità"
+            className="w-9 h-9 rounded-full bg-white/95 flex items-center justify-center text-base font-bold text-slate-700 shadow"
+          >
+            ⓘ
+          </button>
+          <SoundToggle className="w-9 h-9 rounded-full bg-white/95 flex items-center justify-center text-base shadow" />
+          <div className="bg-white/95 px-2.5 h-9 rounded-full text-yellow-500 font-bold text-sm shadow flex items-center gap-1">
+            {state.stars}
+            <span>⭐</span>
           </div>
         </div>
       </header>
 
-      {/* FACT + FOOD + MISSIONE HINT */}
-      <section className="px-4 py-2 flex flex-wrap gap-2 items-center justify-center shrink-0">
-        <div className="bg-white/90 rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-800 shadow max-w-md">
-          {continent.fact}
+      {/* === HINT BAR (1 riga, sparisce a completato) === */}
+      {!allMatched && (
+        <div className="px-3 py-1 text-center text-[11px] sm:text-xs font-semibold text-slate-800 bg-white/25 shrink-0">
+          Trascina ogni animale al suo habitat
         </div>
-        <div className="bg-white/90 rounded-2xl px-3 py-1.5 flex items-center gap-2 shadow">
-          <span className="text-xl">{continent.food.emoji}</span>
-          <span className="font-semibold text-slate-800 text-xs sm:text-sm">{continent.food.name}</span>
-        </div>
-        <div className="bg-white/95 rounded-2xl px-3 py-1.5 text-xs sm:text-sm font-semibold text-slate-900 shadow">
-          {allMatched ? '🎉 Tutti a casa!' : 'Trascina ogni animale al suo habitat'}
-        </div>
-      </section>
+      )}
 
-      {/* AREA GIOCO: habitats sopra, animali sotto */}
-      <main className="flex-1 flex flex-col px-3 sm:px-4 py-2 gap-2 sm:gap-3 overflow-hidden">
-        {/* HABITATS (drop zones) */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1 min-h-0">
+      {/* === AREA GIOCO: habitats sinistra, palette destra === */}
+      <main className="flex-1 flex flex-row gap-2 p-2 overflow-hidden min-h-0">
+        {/* Habitats grandi */}
+        <div className="flex-1 grid grid-cols-3 gap-2 min-h-0">
           {continent.habitats.map((habitat) => {
             const animalsHere = animals.filter(
               (a) => a.habitatId === habitat.id && matchedSet.has(a.emoji)
@@ -148,13 +149,15 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
                 ref={(el) => {
                   habitatRefs.current[habitat.id] = el;
                 }}
-                className="bg-white/40 backdrop-blur rounded-3xl border-2 border-white/80 border-dashed flex flex-col items-center justify-start p-2 sm:p-3 min-h-0 overflow-hidden"
+                className="bg-white/35 backdrop-blur rounded-2xl border-2 border-white/80 border-dashed flex flex-col p-2 min-h-0 overflow-hidden"
               >
-                <div className="text-2xl sm:text-3xl">{habitat.emoji}</div>
-                <div className="text-[10px] sm:text-xs font-bold text-slate-800 uppercase tracking-wide">
-                  {habitat.name}
+                <div className="flex items-center justify-center gap-1.5 shrink-0">
+                  <span className="text-lg sm:text-xl">{habitat.emoji}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    {habitat.name}
+                  </span>
                 </div>
-                <div className="flex-1 flex flex-wrap items-center justify-center gap-2 mt-2 min-h-0 content-center">
+                <div className="flex-1 flex flex-wrap items-center justify-center gap-1.5 content-center min-h-0 mt-1">
                   <AnimatePresence>
                     {animalsHere.map((a) => (
                       <motion.div
@@ -164,7 +167,11 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ type: 'spring', stiffness: 280, damping: 18 }}
                       >
-                        <AnimalAvatar animal={a} photo={animalPhotos[a.name] ?? null} size="sm" />
+                        <AnimalAvatar
+                          animal={a}
+                          photo={animalPhotos[a.name] ?? null}
+                          size="sm"
+                        />
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -174,9 +181,12 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
           })}
         </div>
 
-        {/* PALETTE ANIMALI DA TRASCINARE */}
-        <div className="bg-white/30 backdrop-blur rounded-3xl border border-white/60 px-3 py-2 sm:py-3 shrink-0">
-          <div className="flex flex-wrap gap-3 sm:gap-5 justify-center items-center min-h-[80px]">
+        {/* Palette laterale stretta */}
+        <aside className="w-28 sm:w-36 md:w-44 shrink-0 bg-white/35 backdrop-blur rounded-2xl border border-white/60 p-2 overflow-y-auto">
+          <div className="text-[10px] font-bold text-slate-800 uppercase text-center mb-1.5 tracking-wider">
+            Animali
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
             {animals.filter((a) => !matchedSet.has(a.emoji)).map((animal) => (
               <DraggableAnimal
                 key={animal.emoji}
@@ -185,17 +195,23 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
                 onDrop={(info) => handleDrop(animal, info)}
               />
             ))}
-            {animals.every((a) => matchedSet.has(a.emoji)) && (
-              <div className="text-sm text-slate-700 font-semibold">
-                Tutti a casa ✨
-              </div>
-            )}
           </div>
-        </div>
+          {allMatched && (
+            <div className="text-[10px] text-slate-700 font-semibold text-center mt-2">
+              Tutti a casa ✨
+            </div>
+          )}
+        </aside>
+      </main>
 
-        {/* ATTRIBUTION PEXELS (richiesta dai loro TOS) */}
+      {/* === FOOTER MINI === */}
+      <footer className="flex items-center justify-between px-3 h-7 bg-white/25 text-[10px] text-slate-700 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">{continent.food.emoji}</span>
+          <span className="font-semibold">{continent.food.name}</span>
+        </div>
         {photographers.length > 0 && (
-          <div className="text-[10px] text-slate-700/80 text-center pb-1">
+          <div className="truncate ml-2">
             Foto da{' '}
             <a
               href="https://www.pexels.com"
@@ -206,12 +222,49 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
               Pexels
             </a>
             {' · '}
-            {photographers.join(', ')}
+            {photographers.slice(0, 2).join(', ')}
+            {photographers.length > 2 ? ` +${photographers.length - 2}` : ''}
           </div>
         )}
-      </main>
+      </footer>
 
-      {/* CELEBRATION OVERLAY */}
+      {/* === INFO MODAL (fact) === */}
+      <AnimatePresence>
+        {showInfo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowInfo(false)}
+            className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-5 text-center"
+            >
+              <div className="text-4xl mb-2">{continent.flag}</div>
+              <div className="font-extrabold text-xl text-slate-900 mb-2">{continent.name}</div>
+              <div className="text-sm text-slate-700 leading-relaxed mb-4">{continent.fact}</div>
+              <button
+                type="button"
+                onClick={() => {
+                  playTap();
+                  setShowInfo(false);
+                }}
+                className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-sm shadow hover:bg-slate-800"
+              >
+                Capito!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* === CELEBRATION OVERLAY === */}
       <AnimatePresence>
         {celebrate && (
           <motion.div
@@ -242,21 +295,24 @@ export default function ContinentScene({ continent, animalPhotos }: Props) {
 function AnimalAvatar({
   animal,
   photo,
-  size = 'lg',
+  size = 'md',
 }: {
   animal: Animal;
   photo: PexelsPhoto | null;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md';
 }) {
-  const dim = size === 'lg' ? 'w-20 h-20 sm:w-24 sm:h-24' : 'w-14 h-14 sm:w-16 sm:h-16';
-  const emojiSize = size === 'lg' ? 'text-5xl sm:text-6xl' : 'text-3xl sm:text-4xl';
-  const labelSize = size === 'lg' ? 'text-xs sm:text-sm' : 'text-[10px] sm:text-xs';
+  // sm = nelle habitat dropzone (compatto)
+  // md = nella palette laterale (più grande, area drag)
+  const dim = size === 'md'
+    ? 'w-12 h-12 sm:w-14 sm:h-14'
+    : 'w-10 h-10 sm:w-11 sm:h-11';
+  const emojiSize = size === 'md' ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl';
+  const labelSize = size === 'md' ? 'text-[10px] sm:text-[11px]' : 'text-[9px] sm:text-[10px]';
 
   return (
     <div className="flex flex-col items-center">
       <div
-        className={`${dim} rounded-full overflow-hidden border-4 border-white shadow-xl bg-white/60 flex items-center justify-center`}
-        style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}
+        className={`${dim} rounded-full overflow-hidden border-[3px] border-white shadow-lg bg-white/60 flex items-center justify-center`}
       >
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -273,7 +329,7 @@ function AnimalAvatar({
           </span>
         )}
       </div>
-      <div className={`${labelSize} font-bold text-slate-900 mt-1 text-center max-w-[90px] truncate`}>
+      <div className={`${labelSize} font-bold text-slate-900 mt-0.5 text-center max-w-[64px] truncate leading-tight`}>
         {animal.name}
       </div>
     </div>
@@ -297,20 +353,24 @@ function DraggableAnimal({
       drag
       dragSnapToOrigin
       dragElastic={0.6}
-      whileDrag={{ scale: 1.25, zIndex: 50, cursor: 'grabbing' }}
-      whileTap={{ scale: 1.05 }}
-      animate={!dragging ? { y: [0, -4, 0] } : { y: 0 }}
-      transition={!dragging ? { duration: 1.5, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.15 }}
+      whileDrag={{ scale: 1.4, zIndex: 50, cursor: 'grabbing' }}
+      whileTap={{ scale: 1.1 }}
+      animate={!dragging ? { y: [0, -3, 0] } : { y: 0 }}
+      transition={
+        !dragging
+          ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' }
+          : { duration: 0.15 }
+      }
       onDragStart={() => setDragging(true)}
       onDragEnd={(_, info) => {
         setDragging(false);
         onDrop(info);
       }}
-      className="cursor-grab select-none"
+      className="cursor-grab select-none flex justify-center"
       style={{ touchAction: 'none' }}
       aria-label={`Animale: ${animal.name}`}
     >
-      <AnimalAvatar animal={animal} photo={photo} size="lg" />
+      <AnimalAvatar animal={animal} photo={photo} size="md" />
     </motion.div>
   );
 }
