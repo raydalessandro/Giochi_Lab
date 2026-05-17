@@ -18,10 +18,12 @@ export interface Habitat {
 }
 
 export interface Animal {
-  emoji: string;
+  emoji: string;       // fallback se non ci sono foto / il caricamento fallisce
   name: string;
   sound: string;       // descrizione testuale del verso
   habitatId: string;   // id di un Habitat tra quelli del continente
+  /** Query Pexels per la foto reale (in inglese, più specifica = migliore). */
+  searchQuery?: string;
 }
 
 export interface Continent {
@@ -109,12 +111,12 @@ export const CONTINENTS: Continent[] = [
       { id: 'foresta', emoji: '🌳', name: 'Foresta' },
     ],
     animals: [
-      { emoji: '🦁', name: 'Leone',      sound: 'roooaarr!', habitatId: 'savana' },
-      { emoji: '🐘', name: 'Elefante',   sound: 'pruuum!',   habitatId: 'savana' },
-      { emoji: '🦒', name: 'Giraffa',    sound: '...',       habitatId: 'savana' },
-      { emoji: '🦓', name: 'Zebra',      sound: 'hi hi!',    habitatId: 'savana' },
-      { emoji: '🦛', name: 'Ippopotamo', sound: 'snorf!',    habitatId: 'fiume' },
-      { emoji: '🦍', name: 'Gorilla',    sound: 'uhuh!',     habitatId: 'foresta' },
+      { emoji: '🦁', name: 'Leone',      sound: 'roooaarr!', habitatId: 'savana',  searchQuery: 'lion savanna africa' },
+      { emoji: '🐘', name: 'Elefante',   sound: 'pruuum!',   habitatId: 'savana',  searchQuery: 'african elephant' },
+      { emoji: '🦒', name: 'Giraffa',    sound: '...',       habitatId: 'savana',  searchQuery: 'giraffe africa' },
+      { emoji: '🦓', name: 'Zebra',      sound: 'hi hi!',    habitatId: 'savana',  searchQuery: 'zebra africa' },
+      { emoji: '🦛', name: 'Ippopotamo', sound: 'snorf!',    habitatId: 'fiume',   searchQuery: 'hippopotamus water' },
+      { emoji: '🦍', name: 'Gorilla',    sound: 'uhuh!',     habitatId: 'foresta', searchQuery: 'mountain gorilla' },
     ],
     food: { emoji: '🥭', name: 'Mango' },
     fact: "C'è il deserto del Sahara, grande grande! 🏜️",
