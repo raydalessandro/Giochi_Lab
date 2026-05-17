@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
       "Quattro giochi per imparare giocando — geografia, chimica, geometria, fisica.",
     start_url: "/",
     display: "standalone",
-    orientation: "portrait",
+    orientation: "any",
     background_color: "#0f172a",
     theme_color: "#0f172a",
     icons: [
