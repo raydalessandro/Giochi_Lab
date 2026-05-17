@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PWARegister from "./_components/PWARegister";
+import SoundPrefetch from "./_shared/SoundPrefetch";
 
 export const metadata: Metadata = {
   title: "Giochi Lab",
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body>
         {children}
         <PWARegister />
+        <SoundPrefetch />
       </body>
     </html>
   );
